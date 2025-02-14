@@ -2,7 +2,7 @@ name: Daily GitHub Analysis
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # UTC时间每天6点（北京时间14点，需调整时区）
+    - cron: '0 22 * * *'  # UTC时间每天6点（北京时间14点，需调整时区）
   workflow_dispatch:     # 允许手动触发
 
 env:
