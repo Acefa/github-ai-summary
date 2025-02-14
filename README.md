@@ -1,4 +1,4 @@
-# GitHub AI 项目分析器
+# 🤖 GitHub AI 项目分析器
 
 一个基于AI的自动化工具，用于发现、分析和总结GitHub上的高质量AI相关项目。系统会自动生成详细的分析报告并通过邮件发送。
 
@@ -25,13 +25,15 @@
 ## 🚀 快速开始
 
 1. **克隆项目**
-bash
+```bash
 git clone [repository-url]
 cd github-ai-summary
+```
 
-2. **安装依赖
-bash
+2. **安装依赖**
+```bash
 pip install -r requirements.txt
+```
 
 3. **配置文件设置**
 - 复制`config.yaml.template`为`config.yaml`
@@ -43,7 +45,7 @@ pip install -r requirements.txt
 ## ⚙️ 配置说明
 
 ### GitHub配置
-yaml
+```yaml
 github:
 search_keywords: "AI" # 搜索关键词
 min_stars: 500 # 最低star数要求
@@ -52,23 +54,28 @@ language: "" # 编程语言筛选
 search_criteria:
 min_forks: 100 # 最低fork数
 update_within_days: 3 # 最近更新时间
+```
 
 ### AI分析配置
-yaml
+```yaml
 openrouter:
 model: "deepseek-r1"
 api_url: "https://api.lkeap.cloud.tencent.com/v1/chat/completions"
 max_tokens: 2000
+```
 
 ### 邮件配置
-yaml
+```yaml
 email:
-sender: "noreply@example.com" # 发件人邮箱
-receiver: "admin@example.com" # 收件人邮箱
-smtp_server: "smtp.example.com" # SMTP服务器
-smtp_port: 587 # SMTP端口
+smtp_server: "smtp.qq.com"
+smtp_port: 465
+sender_email: "your-email@qq.com"
+recipients: ["recipient@example.com"]
+subject: "GitHub项目分析报告"
+```
 
 ## 📁 项目结构
+```
 github-ai-summary/
 ├── main.py # 程序入口
 ├── github_crawler.py # GitHub项目爬虫
@@ -80,17 +87,18 @@ github-ai-summary/
 ├── requirements.txt # 项目依赖
 ├── logs/ # 日志目录
 └── reports/ # 分析报告目录
-
+```
 
 ## 📝 使用说明
 
 1. **运行分析器**
-bash
+```bash
 python main.py
+```
 
-2. **查看日志**
-bash
-tail -f logs/github_ai_summary.log
+2. **查看输出**
+- 分析报告：`reports/GitHub项目分析报告_[时间戳].docx`
+- 运行日志：`logs/github_analyzer_[日期].log`
 
 ## 🔍 分析维度
 
@@ -114,6 +122,23 @@ tail -f logs/github_ai_summary.log
 3. **运行环境**
    - 确保稳定的网络连接
    - 推荐使用虚拟环境
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建功能分支
+3. 提交更改
+4. 发起Pull Request
+
+## 📄 许可证
+
+MIT License
+
+## 🔄 更新日志
+
+### v1.0.0 (2025-02-14)
+- 初始版本发布
+- 实现基础功能：项目搜索、AI分析、报告生成、邮件发送
 
 
 
