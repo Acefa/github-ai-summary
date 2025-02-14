@@ -1,0 +1,43 @@
+# 日志系统配置文件
+
+# 日志配置版本
+version: 1
+# 是否禁用现有的日志器
+disable_existing_loggers: false
+
+# 日志格式定义
+formatters:
+  colored:
+    # 日志输出格式：时间 [模块] 级别 消息
+    format: '%(asctime)s 🌟 [%(name)s] %(levelname)s ➤ %(message)s'
+    # 时间格式
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+# 日志处理器配置
+handlers:
+  # 控制台输出处理器
+  console:
+    class: logging.StreamHandler
+    formatter: colored
+    level: INFO
+  # 文件输出处理器
+  file:
+    class: logging.handlers.RotatingFileHandler
+    # 日志文件路径（动态生成）
+    filename: logs/github_analyzer.log
+    formatter: colored
+    # 单个日志文件最大大小（10MB）
+    maxBytes: 10485760
+    # 保留的备份文件数量
+    backupCount: 3
+    # 文件编码
+    encoding: utf-8
+    # 追加模式
+    mode: a
+
+# 根日志器配置
+root:
+  # 全局日志级别
+  level: DEBUG
+  # 使用的处理器
+  handlers: [console, file] 
