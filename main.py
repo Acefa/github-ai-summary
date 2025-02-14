@@ -74,7 +74,8 @@ def main():
         logger.info("🚀 启动GitHub智能分析系统 | 版本: 1.0")
 
         # 加载配置
-        with open("config.yaml", encoding='utf-8') as f:
+        config_path = os.path.join('config', 'config.yaml')
+        with open(config_path, encoding='utf-8') as f:
             config = yaml.safe_load(f)
 
         # 初始化组件

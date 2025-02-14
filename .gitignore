@@ -65,4 +65,7 @@ desktop.ini
 # API密钥和敏感信息（确保不上传）
 **/credentials.json
 **/token.json
-**/secrets.yaml 
+**/secrets.yaml
+
+# 新增配置文件
+config/config.yaml 

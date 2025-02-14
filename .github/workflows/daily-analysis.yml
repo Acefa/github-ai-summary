@@ -1,0 +1,78 @@
+name: Daily GitHub Analysis
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # UTC时间每天6点（北京时间14点，需调整时区）
+  workflow_dispatch:     # 允许手动触发
+
+env:
+  TZ: Asia/Shanghai      # 设置时区为北京时间
+
+jobs:
+  analyze-projects:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create config file
+      run: |
+        mkdir -p config
+        cat << EOF > config/config.yaml
+        github:
+          search_keywords: "AI"
+          min_stars: 500
+          language: ""
+          max_results: 15
+          topics: []
+          search_criteria:
+            min_forks: 100
+            min_size: 5
+            update_within_days: 3
+            exclude_forks: true
+            sort_by: "stars"
+            sort_order: "desc"
+          api:
+            base_url: "https://api.github.com/search/repositories"
+            user_agent: "GitHub-Analyzer/1.0"
+            accept: "application/vnd.github.v3+json"
+            contact_email: "${{ vars.CONTACT_EMAIL }}"
+        
+        openrouter:
+          api_key: "${{ secrets.OPENROUTER_KEY }}"
+          model: "deepseek-r1"
+          api_url: "https://api.lkeap.cloud.tencent.com/v1/chat/completions"
+          max_tokens: 2000
+        
+        email:
+          smtp_server: "smtp.qq.com"
+          smtp_port: 465
+          sender_email: "${{ vars.SENDER_EMAIL }}"
+          sender_password: "${{ secrets.EMAIL_PASSWORD }}"
+          recipients: ["${{ vars.RECIPIENT_EMAIL }}"]
+          subject: "GitHub项目分析报告"
+        EOF
+        
+    - name: Run analysis
+      run: |
+        mkdir -p logs reports
+        python main.py
+        
+    - name: Upload report
+      uses: actions/upload-artifact@v3
+      with:
+        name: analysis-report
+        path: |
+          reports/*.docx
+          logs/*.log 
