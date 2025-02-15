@@ -9,6 +9,7 @@ from email_sender import EmailSender
 import logging
 import logging.config
 from logging import StreamHandler
+import smtplib
 
 class Utf8StreamHandler(StreamHandler):
     def __init__(self, stream=None):
@@ -117,7 +118,11 @@ def main():
         logger.info(f"报告文件完整路径: {full_path}")
 
         # 发送邮件
-        emailer.send_email(os.path.join('reports', filename))
+        try:
+            emailer.send_email(os.path.join('reports', filename))
+        except smtplib.SMTPException as e:
+            logger.error(f"邮件发送失败: {str(e)}")
+            # 继续执行，不中断程序
     except Exception as e:
         logger.exception("💥 发生严重错误 | 详情:")
         raise

@@ -72,20 +72,25 @@ class EmailSender:
         """带重试机制的发送方法"""
         for attempt in range(self.max_retries):
             try:
-                # 手动管理连接关闭
-                server = smtplib.SMTP_SSL(
+                with smtplib.SMTP_SSL(
                     self.config['smtp_server'],
                     self.config['smtp_port'],
                     timeout=self.timeout,
                     context=context
-                )
-                try:
-                    server.set_debuglevel(2)
-                    self._handle_server_communication(server, msg)
-                    logger.info("🎉 邮件发送成功 | 状态: 已送达")
-                    return
-                finally:
-                    server.quit()  # 显式关闭连接
+                ) as server:
+                    try:
+                        server.set_debuglevel(2)
+                        self._handle_server_communication(server, msg)
+                        logger.info("🎉 邮件发送成功 | 状态: 已送达")
+                        return
+                    except smtplib.SMTPAuthenticationError as e:
+                        logger.error(f"邮箱认证失败 | 错误代码: {e.smtp_code} | 消息: {e.smtp_error.decode('utf-8')}")
+                        raise
+                    except smtplib.SMTPException as e:
+                        logger.error(f"SMTP错误: {str(e)}")
+                        if attempt < self.max_retries - 1:
+                            continue
+                        raise
             except (smtplib.SMTPServerDisconnected, socket.timeout) as e:
                 if attempt < self.max_retries - 1:
                     wait_time = (attempt + 1) * 5
@@ -96,12 +101,25 @@ class EmailSender:
 
     def _handle_server_communication(self, server: smtplib.SMTP_SSL, msg: MIMEMultipart):
         """处理SMTP协议通信"""
-        logger.info("服务器响应: %s", server.ehlo())
+        try:
+            logger.info("服务器响应: %s", server.ehlo())
+        except smtplib.SMTPException as e:
+            logger.error(f"EHLO命令失败: {str(e)}")
+            raise
+        
         logger.info("正在登录...")
         try:
             server.login(self.config['sender_email'], self.config['sender_password'])
         except smtplib.SMTPAuthenticationError as e:
             logger.error(f"邮箱认证失败 | 错误代码: {e.smtp_code} | 消息: {e.smtp_error.decode('utf-8')}")
             raise
+        except smtplib.SMTPException as e:
+            logger.error(f"登录失败: {str(e)}")
+            raise
+        
         logger.info("正在发送邮件...")
-        server.send_message(msg) 
+        try:
+            server.send_message(msg)
+        except smtplib.SMTPException as e:
+            logger.error(f"发送邮件失败: {str(e)}")
+            raise 
