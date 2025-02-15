@@ -51,6 +51,11 @@ jobs:
         # 测试到目标服务的连通性（例如测试腾讯云 API）
         nc -vz api.lkeap.cloud.tencent.com 443
         
+    - name: Allow SMTP
+      run: |
+        sudo ufw allow out 465/tcp
+        sudo ufw allow out 587/tcp
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
