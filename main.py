@@ -1,5 +1,4 @@
 import sys
-from ctypes import windll
 import yaml
 from datetime import datetime
 import os
@@ -18,9 +17,13 @@ class Utf8StreamHandler(StreamHandler):
             self.stream.reconfigure(encoding="utf-8")
 
 def main():
-    # 修复Windows控制台编码问题
+    # 根据操作系统设置编码
     if sys.platform == 'win32':
-        windll.kernel32.SetConsoleOutputCP(65001)
+        try:
+            from ctypes import windll
+            windll.kernel32.SetConsoleOutputCP(65001)
+        except ImportError:
+            pass
         os.environ["PYTHONIOENCODING"] = "utf-8"
     
     # 确保日志目录存在
