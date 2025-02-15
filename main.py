@@ -27,6 +27,10 @@ def main():
     log_dir = 'logs'
     os.makedirs(log_dir, exist_ok=True)
     
+    # 确保config目录存在
+    config_dir = 'config'
+    os.makedirs(config_dir, exist_ok=True)
+    
     # 生成日志文件名（包含时间戳）
     log_file = os.path.join(log_dir, f'github_analyzer_{datetime.now().strftime("%Y%m%d")}.log')
     
@@ -73,8 +77,20 @@ def main():
     try:
         logger.info("🚀 启动GitHub智能分析系统 | 版本: 1.0")
 
-        # 加载配置
+        # 检查配置文件是否存在
         config_path = os.path.join('config', 'config.yaml')
+        if not os.path.exists(config_path):
+            # 如果配置文件不存在，从模板创建
+            template_path = 'config.yaml'
+            if os.path.exists(template_path):
+                logger.info("配置文件不存在，从模板创建...")
+                import shutil
+                shutil.copy2(template_path, config_path)
+            else:
+                logger.error("配置文件和模板都不存在！")
+                raise FileNotFoundError("请确保config.yaml或config.yaml.template文件存在")
+        
+        # 加载配置
         with open(config_path, encoding='utf-8') as f:
             config = yaml.safe_load(f)
 
