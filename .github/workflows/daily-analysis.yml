@@ -28,7 +28,10 @@ env:
 jobs:
   analyze-projects:
     runs-on: ubuntu-latest
-    
+    environment: 
+      name: production
+      url: https://github.com/acefa163/daily-github-analysis
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
