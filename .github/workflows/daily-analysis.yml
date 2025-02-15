@@ -2,8 +2,25 @@ name: Daily GitHub Analysis
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # UTC时间每天6点（北京时间14点，需调整时区）
+    - cron: '0 22 * * *'  # UTC时间22点（北京时间次日6点）
   workflow_dispatch:     # 允许手动触发
+    inputs:
+      search_keywords:
+        description: '搜索关键词（默认：AI）'
+        required: false
+        default: 'AI'
+      min_stars:
+        description: '最低star数要求'
+        required: false
+        default: '500'
+      max_results:
+        description: '分析项目数量'
+        required: false
+        default: '15'
+      language:
+        description: '编程语言筛选（留空表示所有语言）'
+        required: false
+        default: ''
 
 env:
   TZ: Asia/Shanghai      # 设置时区为北京时间
@@ -31,10 +48,10 @@ jobs:
         mkdir -p config
         cat << EOF > config/config.yaml
         github:
-          search_keywords: "AI"
-          min_stars: 500
+          search_keywords: "${{ github.event.inputs.search_keywords || 'AI' }}"
+          min_stars: ${{ github.event.inputs.min_stars || 500 }}
           language: ""
-          max_results: 15
+          max_results: ${{ github.event.inputs.max_results || 15 }}
           topics: []
           search_criteria:
             min_forks: 100
@@ -70,7 +87,7 @@ jobs:
         python main.py
         
     - name: Upload report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: analysis-report
         path: |
