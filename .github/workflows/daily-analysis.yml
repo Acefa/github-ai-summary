@@ -65,14 +65,14 @@ jobs:
         cat << EOF > config/config.yaml
         github:
           search_keywords: "${{ github.event.inputs.search_keywords || 'AI' }}"
-          min_stars: ${{ github.event.inputs.min_stars || 500 }}
+          min_stars: ${{ github.event.inputs.min_stars || 300 }}
           language: ""
-          max_results: ${{ github.event.inputs.max_results || 15 }}
+          max_results: ${{ github.event.inputs.max_results || 10 }}
           topics: []
           search_criteria:
             min_forks: 100
             min_size: 5
-            update_within_days: 3
+            update_within_days: 1
             exclude_forks: true
             sort_by: "stars"
             sort_order: "desc"
