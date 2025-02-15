@@ -37,6 +37,19 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
+
+    - name: Get Public IP
+      run: |
+        echo "IPv4地址: $(curl -s https://api.ipify.org)"
+        echo "IPv6地址: $(curl -s https://api.github.com/meta | jq '.actions[]')"
+        
+    - name: Network Diagnostics
+      run: |
+        # 获取出口 IP
+        echo "公网 IPv4: $(curl -s https://api.ipify.org)"
+        
+        # 测试到目标服务的连通性（例如测试腾讯云 API）
+        nc -vz api.lkeap.cloud.tencent.com 443
         
     - name: Install dependencies
       run: |
