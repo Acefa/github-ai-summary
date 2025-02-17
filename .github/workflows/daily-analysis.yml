@@ -40,14 +40,6 @@ jobs:
       with:
         python-version: '3.10'
         
-    - name: Network Diagnostics
-      run: |
-        # 获取出口 IP
-        echo "公网 IPv4: $(curl -s https://api.ipify.org)"
-        
-        # 测试到目标服务的连通性（例如测试腾讯云 API）
-        nc -vz api.lkeap.cloud.tencent.com 443
-        
     - name: Allow SMTP
       run: |
         sudo ufw allow out 465/tcp
@@ -69,7 +61,7 @@ jobs:
           max_results: ${{ github.event.inputs.max_results || 10 }}
           topics: []
           search_criteria:
-            min_forks: 100
+            min_forks: 0
             min_size: 5
             update_within_days: 1
             exclude_forks: true
