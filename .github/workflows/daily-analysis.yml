@@ -59,15 +59,15 @@ jobs:
         mkdir -p config
         cat << EOF > config/config.yaml
         github:
-          search_keywords: "${{ github.event.inputs.search_keywords || 'AI,LLM' }}"
-          min_stars: ${{ github.event.inputs.min_stars || 100 }}
+          search_keywords: "${{ github.event.inputs.search_keywords || 'AI,LLM,agent,prompt,cursor' }}"
+          min_stars: ${{ github.event.inputs.min_stars || 500 }}
           language: "${{ github.event.inputs.language || '' }}"
-          max_results: ${{ github.event.inputs.max_results || 5 }}
+          max_results: ${{ github.event.inputs.max_results || 40 }}
           topics: []
           search_criteria:
             min_forks: 10
             min_size: 5
-            update_within_days: ${{ github.event.inputs.update_days || 7 }}
+            update_within_days: ${{ github.event.inputs.update_days || 3 }}
             exclude_forks: true
             sort_by: "updated"
             sort_order: "desc"
