@@ -6,21 +6,25 @@ on:
   workflow_dispatch:     # 允许手动触发
     inputs:
       search_keywords:
-        description: '搜索关键词（默认：AI）'
+        description: '搜索关键词（用逗号分隔，如：AI,LLM,GPT）'
         required: false
-        default: 'AI'
+        default: 'AI,LLM'
       min_stars:
         description: '最低star数要求'
         required: false
-        default: '300'
+        default: '100'
       max_results:
         description: '分析项目数量'
         required: false
-        default: '10'
+        default: '5'
       language:
         description: '编程语言筛选（留空表示所有语言）'
         required: false
         default: ''
+      update_days:
+        description: '最近更新时间范围（天）'
+        required: false
+        default: '7'
 
 env:
   TZ: Asia/Shanghai      # 设置时区为北京时间
@@ -55,17 +59,17 @@ jobs:
         mkdir -p config
         cat << EOF > config/config.yaml
         github:
-          search_keywords: "${{ github.event.inputs.search_keywords || 'AI' }}"
-          min_stars: ${{ github.event.inputs.min_stars || 300 }}
-          language: ""
-          max_results: ${{ github.event.inputs.max_results || 10 }}
+          search_keywords: "${{ github.event.inputs.search_keywords || 'AI,LLM' }}"
+          min_stars: ${{ github.event.inputs.min_stars || 100 }}
+          language: "${{ github.event.inputs.language || '' }}"
+          max_results: ${{ github.event.inputs.max_results || 5 }}
           topics: []
           search_criteria:
-            min_forks: 0
+            min_forks: 10
             min_size: 5
-            update_within_days: 1
+            update_within_days: ${{ github.event.inputs.update_days || 7 }}
             exclude_forks: true
-            sort_by: "stars"
+            sort_by: "updated"
             sort_order: "desc"
           api:
             base_url: "https://api.github.com/search/repositories"
@@ -96,7 +100,8 @@ jobs:
     - name: Upload report
       uses: actions/upload-artifact@v4
       with:
-        name: analysis-report
+        name: analysis-report-${{ github.run_number }}
         path: |
           reports/*.docx
-          logs/*.log 
+          logs/*.log
+        retention-days: 7  # 只保留7天的报告 

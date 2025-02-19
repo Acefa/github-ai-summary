@@ -83,21 +83,32 @@ class GitHubCrawler:
             "AI language:python stars:>=1000 pushed:>2024-02-07 forks:>=100 size:>=5"
         """
         criteria = config['search_criteria']
+        # 获取当前时间和时间范围
+        now = datetime.now(timezone.utc)
+        update_days = criteria['update_within_days']
+        
+        # 计算时间范围（例如：最近2天的项目）
+        date_range = [
+            (now - timedelta(days=update_days)).strftime('%Y-%m-%d'),
+            now.strftime('%Y-%m-%d')
+        ]
+        
         query_parts = [
-            config['search_keywords'],
-            f"stars:>={config['min_stars']}",
+            " OR ".join(config['search_keywords'].split(",")),
+            # 使用star范围而不是最小值，以发现潜力项目
+            f"stars:{config['min_stars']}..{config['min_stars']*10}",
         ]
 
         # 添加语言过滤
         if config.get('language'):
             query_parts.append(f"language:{config['language']}")
 
-        # 添加最近更新时间过滤
-        days_ago = (datetime.now(timezone.utc) - timedelta(days=criteria['update_within_days'])).strftime('%Y-%m-%d')
-        query_parts.append(f"pushed:>{days_ago}")
+        # 使用精确的时间范围
+        query_parts.append(f"pushed:{date_range[0]}..{date_range[1]}")
 
-        # 添加fork数量过滤
-        query_parts.append(f"forks:>={criteria['min_forks']}")
+        # 使用fork与star的比例作为过滤条件
+        min_fork_ratio = 0.1  # fork数至少是star数的10%
+        query_parts.append(f"forks:>={int(config['min_stars'] * min_fork_ratio)}")
 
         # 添加仓库大小过滤
         query_parts.append(f"size:>={criteria['min_size']}")
@@ -106,10 +117,9 @@ class GitHubCrawler:
         if criteria['exclude_forks']:
             query_parts.append("fork:false")
 
-        # 添加主题标签过滤
-        if config.get('topics'):
-            for topic in config['topics']:
-                query_parts.append(f"topic:{topic}")
+        # 添加额外的质量指标
+        query_parts.append("good-first-issues:>0")  # 有良好的新手问题
+        query_parts.append("topics:>=3")  # 至少有3个主题标签
 
         # 组合查询字符串
         query = ' '.join(query_parts)
@@ -134,26 +144,35 @@ class GitHubCrawler:
         """
         scores = []
         
-        # 1. 活跃度评分 (30分)
-        # 确保两个时间都是UTC时区
+        # 1. 活跃度评分 (40分)
         now = datetime.now(timezone.utc)
         updated_at = datetime.fromisoformat(project['updated_at'].replace('Z', '+00:00'))
         update_days = (now - updated_at).days
-        activity_score = 30 * (1 - min(update_days / 180, 1))  # 半年内更新得满分
+        # 最近更新得高分
+        activity_score = 40 * (1 - min(update_days / 7, 1))
         scores.append(activity_score)
         
-        # 2. 受欢迎度评分 (40分)
-        popularity_score = min(40 * (project['stars'] / 10000), 40)  # 1万star满分
-        scores.append(popularity_score)
-        
-        # 3. 维护性评分 (20分)
+        # 2. 增长潜力评分 (30分)
         if project['stars'] > 0:
+            fork_ratio = project['forks'] / project['stars']
+            growth_score = 30 * min(fork_ratio * 2, 1)  # fork比例越高说明越有潜力
+        else:
+            growth_score = 0
+        scores.append(growth_score)
+        
+        # 3. 社区活跃度评分 (20分)
+        if project['stars'] > 0:
+            # 看issue数量是否适中（太少说明不活跃，太多说明维护不足）
             issue_ratio = project['open_issues'] / project['stars']
-            maintenance_score = 20 * (1 - min(issue_ratio * 10, 1))  # issue比例越低越好
+            ideal_ratio = 0.1  # 理想的issue比例
+            maintenance_score = 20 * (1 - min(abs(issue_ratio - ideal_ratio) * 5, 1))
             scores.append(maintenance_score)
         
         # 4. 成熟度评分 (10分)
-        maturity_score = min(10 * (project['size'] / 10000), 10)  # 10MB代码量满分
+        # 项目大小适中（太小可能功能不足，太大可能过于复杂）
+        ideal_size = 5000  # 理想大小5MB
+        size_diff = abs(project['size'] - ideal_size) / ideal_size
+        maturity_score = 10 * (1 - min(size_diff, 1))
         scores.append(maturity_score)
         
         # 确保总分不超过100
@@ -178,8 +197,15 @@ class GitHubCrawler:
                 project['quality_score'] = round(score, 2)
                 scored_projects.append(project)
         
-        # 按质量分数排序
-        return sorted(scored_projects, key=lambda x: x['quality_score'], reverse=True)
+        # 使用多重排序：先按更新时间排序，再按质量分数排序
+        return sorted(
+            scored_projects,
+            key=lambda x: (
+                datetime.fromisoformat(x['updated_at'].replace('Z', '+00:00')),
+                x['quality_score']
+            ),
+            reverse=True
+        )
 
     def _apply_custom_filters(self, projects: List[Dict], filters: List[Callable[[Dict], bool]] = None) -> List[Dict]:
         """
@@ -193,8 +219,17 @@ class GitHubCrawler:
             List[Dict]: 过滤后的项目列表
         """
         if not filters:
-            return projects
-            
+            filters = [
+                # 基本要求
+                lambda p: p['description'] is not None,
+                # 确保有基本文档
+                lambda p: len(p['topics']) >= 2,
+                # 确保项目不是太新（避免昙花一现）
+                lambda p: (datetime.now(timezone.utc) - datetime.fromisoformat(p['created_at'].replace('Z', '+00:00'))).days >= 7,
+                # 确保近期有更新
+                lambda p: (datetime.now(timezone.utc) - datetime.fromisoformat(p['updated_at'].replace('Z', '+00:00'))).days <= 7,
+            ]
+        
         filtered_projects = projects
         for filter_func in filters:
             filtered_projects = [p for p in filtered_projects if filter_func(p)]
