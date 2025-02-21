@@ -7,6 +7,10 @@ github:
   search_keywords: "AI"
   # 最低star数要求
   min_stars: 500
+   # 搜索关键词
+  search_keywords: "AI,LLM,prompt,agent,cursor"
+  # 最低star数要求
+  min_stars: 100
   # 编程语言过滤（空字符串表示所有语言）
   language: ""
   # 每次分析的项目数量
@@ -16,17 +20,18 @@ github:
   # 搜索条件配置
   search_criteria:
     # 最低fork数要求
-    min_forks: 100
+    min_forks: 10
     # 最小仓库大小（KB）
     min_size: 5
     # 最近更新时间范围（天）
-    update_within_days: 3
+    update_within_days: 7
     # 是否排除fork的仓库
     exclude_forks: true
     # 排序方式（stars/forks/updated）
-    sort_by: "stars"
+    sort_by: "updated"
     # 排序顺序（desc/asc）
     sort_order: "desc"
+  # GitHub API配置
   # GitHub API配置
   api:
     base_url: "https://api.github.com/search/repositories"
@@ -34,12 +39,12 @@ github:
     accept: "application/vnd.github.v3+json"
     contact_email: "your-email@example.com"
 
-# OpenRouter API配置（腾讯云）
+# OpenRouter API配置
 openrouter:
   api_key: "your-api-key-here"  # 替换为你的API密钥
-  model: "deepseek-r1"
-  api_url: "https://api.lkeap.cloud.tencent.com/v1/chat/completions"
-  max_tokens: 2000
+  model: "deepseek/deepseek-r1:free"
+  api_url: "https://openrouter.ai/api/v1/chat/completions"
+  max_tokens: 4000
 
 # 邮件发送配置
 email:
@@ -50,7 +55,7 @@ email:
   recipients: ["recipient1@example.com", "recipient2@example.com"]  # 替换为实际收件人
   subject: "GitHub项目分析报告"
 
-# 备用API配置（OpenRouter备用）
+# 备用API配置
 tencent_backup:
   api_key: "your-backup-api-key-here"  # 替换为你的备用API密钥
   model: "deepseek/deepseek-r1:free"
