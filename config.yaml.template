@@ -8,13 +8,13 @@ github:
   # 最低star数要求
   min_stars: 500
    # 搜索关键词
-  search_keywords: "AI,LLM,prompt,agent,cursor"
+  search_keywords: "AI,"
   # 最低star数要求
   min_stars: 100
   # 编程语言过滤（空字符串表示所有语言）
   language: ""
   # 每次分析的项目数量
-  max_results: 15
+  max_results: 20
   # 主题标签过滤（空数组表示不过滤）
   topics: []
   # 搜索条件配置

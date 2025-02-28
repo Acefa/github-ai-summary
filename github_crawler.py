@@ -96,7 +96,7 @@ class GitHubCrawler:
         query_parts = [
             " OR ".join(config['search_keywords'].split(",")),
             # 使用star范围而不是最小值，以发现潜力项目
-            f"stars:{config['min_stars']}..{config['min_stars']*10}",
+            f"stars:{config['min_stars']}..{config['min_stars']*15}",
         ]
 
         # 添加语言过滤
@@ -107,7 +107,7 @@ class GitHubCrawler:
         query_parts.append(f"pushed:{date_range[0]}..{date_range[1]}")
 
         # 使用fork与star的比例作为过滤条件
-        min_fork_ratio = 0.1  # fork数至少是star数的10%
+        min_fork_ratio = 0.05  # fork数至少是star数的10%
         query_parts.append(f"forks:>={int(config['min_stars'] * min_fork_ratio)}")
 
         # 添加仓库大小过滤
@@ -119,7 +119,7 @@ class GitHubCrawler:
 
         # 添加额外的质量指标
         query_parts.append("good-first-issues:>0")  # 有良好的新手问题
-        query_parts.append("topics:>=3")  # 至少有3个主题标签
+        query_parts.append("topics:>=2")  # 至少有3个主题标签
 
         # 组合查询字符串
         query = ' '.join(query_parts)
