@@ -8,7 +8,7 @@ on:
       search_keywords:
         description: '搜索关键词（用逗号分隔，如：AI,LLM,GPT）'
         required: false
-        default: 'AI,'
+        default: 'AI'
       min_stars:
         description: '最低star数要求'
         required: false
@@ -24,7 +24,7 @@ on:
       update_days:
         description: '最近更新时间范围（天）'
         required: false
-        default: '7'
+        default: '3'
 
 env:
   TZ: Asia/Shanghai      # 设置时区为北京时间
@@ -59,7 +59,7 @@ jobs:
         mkdir -p config
         cat << EOF > config/config.yaml
         github:
-          search_keywords: "${{ github.event.inputs.search_keywords || 'AI,' }}"
+          search_keywords: "${{ github.event.inputs.search_keywords || 'AI' }}"
           min_stars: ${{ github.event.inputs.min_stars || 500 }}
           language: "${{ github.event.inputs.language || '' }}"
           max_results: ${{ github.event.inputs.max_results || 20 }}
