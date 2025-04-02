@@ -67,7 +67,7 @@ class AIAnalyzer:
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": self.max_tokens,
-            "temperature": 0.7,  # 添加温度参数，降低生成激进内容的可能
+            "temperature": 0.5,  # 添加温度参数，降低生成激进内容的可能
             "top_p": 0.9,  # 控制输出多样性
             "frequency_penalty": 0.3  # 减少重复内容
         }

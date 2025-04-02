@@ -16,7 +16,7 @@ on:
       max_results:
         description: '分析项目数量'
         required: false
-        default: '500'
+        default: '200'
       language:
         description: '编程语言筛选（留空表示所有语言）'
         required: false
