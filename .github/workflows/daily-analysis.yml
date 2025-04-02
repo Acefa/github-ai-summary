@@ -8,15 +8,15 @@ on:
       search_keywords:
         description: '搜索关键词（用逗号分隔，如：AI,LLM,GPT）'
         required: false
-        default: 'AI'
+        default: ''
       min_stars:
         description: '最低star数要求'
         required: false
-        default: '500'
+        default: '100'
       max_results:
         description: '分析项目数量'
         required: false
-        default: '5'
+        default: '500'
       language:
         description: '编程语言筛选（留空表示所有语言）'
         required: false

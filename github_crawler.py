@@ -17,7 +17,7 @@ GitHub项目爬虫模块
 使用示例：
     config = {
         "search_keywords": "AI",
-        "min_stars": 1000,
+        "min_stars": 100,
         "max_results": 20,
         ...
     }
@@ -96,7 +96,7 @@ class GitHubCrawler:
         query_parts = [
             " OR ".join(config['search_keywords'].split(",")),
             # 使用star范围而不是最小值，以发现潜力项目
-            f"stars:{config['min_stars']}..{config['min_stars']*15}",
+            f"stars:{config['min_stars']}..{config['min_stars']*500}",
         ]
 
         # 添加语言过滤
