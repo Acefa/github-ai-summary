@@ -8,7 +8,7 @@ github:
   # 最低star数要求
   min_stars: 100
    # 搜索关键词
-  search_keywords: "AI,"
+  search_keywords: ""
   # 最低star数要求
   min_stars: 100
   # 编程语言过滤（空字符串表示所有语言）

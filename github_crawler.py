@@ -64,8 +64,8 @@ class GitHubCrawler:
         """
         构建GitHub高级搜索查询字符串
         
-        构建包含多个条件的搜索查询，支持：
-        - 关键词搜索
+        构建包括多个条件的搜索查询，支持：
+        - 关键词搜索（可选）
         - stars数过滤
         - 编程语言过滤
         - 更新时间过滤
@@ -80,7 +80,7 @@ class GitHubCrawler:
             str: 格式化的搜索查询字符串
             
         示例查询:
-            "AI language:python stars:>=1000 pushed:>2024-02-07 forks:>=100 size:>=5"
+            "stars:>=1000 pushed:>2024-02-07 forks:>=100 size:>=5"
         """
         criteria = config['search_criteria']
         # 获取当前时间和时间范围
@@ -93,13 +93,17 @@ class GitHubCrawler:
             now.strftime('%Y-%m-%d')
         ]
         
-        query_parts = [
-            " OR ".join(config['search_keywords'].split(",")),
-            # 使用star范围而不是最小值，以发现潜力项目
-            f"stars:{config['min_stars']}..{config['min_stars']*500}",
-        ]
+        query_parts = []
+        
+        # 添加关键词搜索（如果有）
+        if config.get('search_keywords'):
+            keywords = " OR ".join(config['search_keywords'].split(","))
+            query_parts.append(keywords)
+        
+        # 使用star范围而不是最小值，以发现潜力项目
+        query_parts.append(f"stars:{config['min_stars']}..{config['min_stars']*500}")
 
-        # 添加语言过滤
+        # 添加语言过滤（如果有）
         if config.get('language'):
             query_parts.append(f"language:{config['language']}")
 
@@ -107,7 +111,7 @@ class GitHubCrawler:
         query_parts.append(f"pushed:{date_range[0]}..{date_range[1]}")
 
         # 使用fork与star的比例作为过滤条件
-        min_fork_ratio = 0.05  # fork数至少是star数的10%
+        min_fork_ratio = 0.05  # fork数至少是star数的5%
         query_parts.append(f"forks:>={int(config['min_stars'] * min_fork_ratio)}")
 
         # 添加仓库大小过滤
@@ -119,7 +123,7 @@ class GitHubCrawler:
 
         # 添加额外的质量指标
         query_parts.append("good-first-issues:>0")  # 有良好的新手问题
-        query_parts.append("topics:>=2")  # 至少有3个主题标签
+        query_parts.append("topics:>=2")  # 至少有2个主题标签
 
         # 组合查询字符串
         query = ' '.join(query_parts)
@@ -243,6 +247,7 @@ class GitHubCrawler:
         - API速率限制处理
         - 网络错误处理
         - 响应数据解析
+        - 结果多样性保证
         
         Returns:
             List[Dict]: 项目信息列表，每个项目包含：
@@ -256,6 +261,7 @@ class GitHubCrawler:
                 - topics: 主题标签列表
                 - size: 仓库大小(KB)
                 - open_issues: 开放问题数量
+                - quality_score: 质量评分
         
         Raises:
             RuntimeError: 当遇到API限制时
@@ -287,6 +293,7 @@ class GitHubCrawler:
             "stars": item["stargazers_count"],
             "forks": item["forks_count"],
             "updated_at": item["pushed_at"],
+            "created_at": item["created_at"],
             "language": item["language"],
             "topics": item.get("topics", []),
             "size": item["size"],
@@ -302,19 +309,84 @@ class GitHubCrawler:
             lambda p: len(p['topics']) >= 1,  # 要求至少有1个主题标签
             lambda p: p['forks'] >= p['stars'] * 0.05,  # fork数至少是star数的5%
         ]
-        final_projects = self._apply_custom_filters(quality_projects, custom_filters)
+        filtered_projects = self._apply_custom_filters(quality_projects, custom_filters)
         
         # 如果过滤后项目太少，放宽条件重试
-        if len(final_projects) < 3:
+        if len(filtered_projects) < 3:
             logger.warning("项目数量过少，放宽过滤条件重试...")
             custom_filters = [
                 lambda p: p['description'] is not None,  # 只要有描述即可
                 lambda p: p['stars'] >= self.config['min_stars'],  # 保持最低star要求
             ]
-            final_projects = self._apply_custom_filters(quality_projects, custom_filters)
+            filtered_projects = self._apply_custom_filters(quality_projects, custom_filters)
+        
+        # 确保语言多样性
+        final_projects = self._ensure_diversity(filtered_projects)
         
         logger.info(f"🎯 筛选出{len(final_projects)}个高质量项目 | 平均质量分数: {mean([p['quality_score'] for p in final_projects]):.2f}")
         
         # 确保返回足够的项目
         return final_projects[:self.config['max_results']]
+
+    def _ensure_diversity(self, projects: List[Dict]) -> List[Dict]:
+        """
+        确保结果的多样性，包括语言、主题和领域的多样性
+        
+        Args:
+            projects (List[Dict]): 过滤后的项目列表
+            
+        Returns:
+            List[Dict]: 具有多样性的项目列表
+        """
+        if not projects:
+            return []
+        
+        # 按语言分组
+        language_groups = {}
+        for project in projects:
+            lang = project['language'] or 'Unknown'
+            if lang not in language_groups:
+                language_groups[lang] = []
+            language_groups[lang].append(project)
+        
+        # 计算每种语言应该选择的项目数量
+        max_results = self.config['max_results']
+        languages = list(language_groups.keys())
+        
+        # 如果语言种类少于目标数量，每种语言至少选一个
+        if len(languages) <= max_results:
+            projects_per_language = {lang: max(1, max_results // len(languages)) for lang in languages}
+        else:
+            # 如果语言种类多于目标数量，选择最流行的几种语言
+            sorted_langs = sorted(languages, 
+                                 key=lambda l: sum(p['stars'] for p in language_groups[l]), 
+                                 reverse=True)
+            projects_per_language = {lang: 0 for lang in languages}
+            for lang in sorted_langs[:max_results]:
+                projects_per_language[lang] = 1
+        
+        # 从每种语言中选择最优质的项目
+        diverse_projects = []
+        for lang, count in projects_per_language.items():
+            if count > 0:
+                # 按质量分数排序
+                sorted_projects = sorted(language_groups[lang], 
+                                        key=lambda p: p['quality_score'], 
+                                        reverse=True)
+                diverse_projects.extend(sorted_projects[:count])
+        
+        # 如果还有剩余名额，从所有项目中选择最优质的填充
+        remaining_slots = max_results - len(diverse_projects)
+        if remaining_slots > 0:
+            # 排除已选项目
+            selected_urls = {p['url'] for p in diverse_projects}
+            remaining_projects = [p for p in projects if p['url'] not in selected_urls]
+            # 按质量分数排序
+            sorted_remaining = sorted(remaining_projects, 
+                                     key=lambda p: p['quality_score'], 
+                                     reverse=True)
+            diverse_projects.extend(sorted_remaining[:remaining_slots])
+        
+        # 最终按质量分数排序
+        return sorted(diverse_projects, key=lambda p: p['quality_score'], reverse=True)
 

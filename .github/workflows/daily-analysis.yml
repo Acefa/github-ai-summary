@@ -59,10 +59,10 @@ jobs:
         mkdir -p config
         cat << EOF > config/config.yaml
         github:
-          search_keywords: "${{ github.event.inputs.search_keywords || 'AI' }}"
-          min_stars: ${{ github.event.inputs.min_stars || 500 }}
+          search_keywords: "${{ github.event.inputs.search_keywords || '' }}"
+          min_stars: ${{ github.event.inputs.min_stars || 100 }}
           language: "${{ github.event.inputs.language || '' }}"
-          max_results: ${{ github.event.inputs.max_results || 20 }}
+          max_results: ${{ github.event.inputs.max_results || 200 }}
           topics: []
           search_criteria:
             min_forks: 10

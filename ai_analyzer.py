@@ -142,7 +142,7 @@ class AIAnalyzer:
         Returns:
             str: 格式化的提示词
         """
-        return f"""请用中文分析以下GitHub项目，注意使用客观、专业的语言：
+        return f"""请用中文分析以下GitHub项目，注意使用客观、通熟易懂的语言：
         
         项目名称：{project['name']}
         项目地址：{project['url']}
@@ -152,9 +152,7 @@ class AIAnalyzer:
         Fork数：{project.get('forks', 0)}
         主题标签：{', '.join(project.get('topics', []))}
         
-        请按以下格式输出分析结果（使用客观、专业的语言，避免敏感词）：
-        
-        一句话总结该项目，突出项目特点。
+        一句话总结该项目，突出项目特点。（使用客观、通熟易懂的语言，避免敏感词）：
         
         注意事项：
         1. 使用清晰的段落划分
@@ -162,7 +160,8 @@ class AIAnalyzer:
         3. 使用中文标点符号
         4. 保持专业性的同时确保可读性
         5. 适当使用分行，但不要过度分行
-        6. 使用客观、专业的描述语言
+        6. 使用客观、通熟易懂的描述语言
+        7.100个中文以内
         """
 
     def _format_analysis(self, raw_analysis: str) -> str:
