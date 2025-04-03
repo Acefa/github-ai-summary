@@ -14,7 +14,7 @@ github:
   # 编程语言过滤（空字符串表示所有语言）
   language: ""
   # 每次分析的项目数量
-  max_results: 200
+  max_results: 100
   # 主题标签过滤（空数组表示不过滤）
   topics: []
   # 搜索条件配置

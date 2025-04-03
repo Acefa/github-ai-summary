@@ -146,22 +146,19 @@ class AIAnalyzer:
         
         项目名称：{project['name']}
         项目地址：{project['url']}
-        项目描述：{project.get('description', '无描述')}
-        技术栈：{project.get('language', '未知')}
         Stars数：{project.get('stars', 0)}
-        Fork数：{project.get('forks', 0)}
-        主题标签：{', '.join(project.get('topics', []))}
+        Fork数：{project.get('forks', 0)}       
+        请按照以下格式输出分析结果：
+        {project['name']}: "分析内容..."
         
-        一句话总结该项目，突出项目特点。（使用客观、通熟易懂的语言，避免敏感词）：
-        
-        注意事项：
-        1. 使用清晰的段落划分
-        2. 避免使用markdown标记和特殊符号
+        分析内容要求：
+        1. 使用清晰的语言描述项目的主要功能和目的
+        2. 突出项目的特点和价值
         3. 使用中文标点符号
         4. 保持专业性的同时确保可读性
-        5. 适当使用分行，但不要过度分行
-        6. 使用客观、通熟易懂的描述语言
-        7.100个中文以内
+        5. 使用客观、通熟易懂的描述语言
+        6. 字数控制在100个字以内
+        7. 不要使用markdown标记和特殊符号
         """
 
     def _format_analysis(self, raw_analysis: str) -> str:

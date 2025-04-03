@@ -62,7 +62,7 @@ jobs:
           search_keywords: "${{ github.event.inputs.search_keywords || '' }}"
           min_stars: ${{ github.event.inputs.min_stars || 100 }}
           language: "${{ github.event.inputs.language || '' }}"
-          max_results: ${{ github.event.inputs.max_results || 200 }}
+          max_results: ${{ github.event.inputs.max_results || 100 }}
           topics: []
           search_criteria:
             min_forks: 10

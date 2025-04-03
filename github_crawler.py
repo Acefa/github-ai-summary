@@ -70,7 +70,6 @@ class GitHubCrawler:
         - 编程语言过滤
         - 更新时间过滤
         - fork数过滤
-        - 仓库大小过滤
         - 主题标签过滤
         
         Args:
@@ -80,7 +79,7 @@ class GitHubCrawler:
             str: 格式化的搜索查询字符串
             
         示例查询:
-            "stars:>=1000 pushed:>2024-02-07 forks:>=100 size:>=5"
+            "stars:>=1000 pushed:>2024-02-07 forks:>=100"
         """
         criteria = config['search_criteria']
         # 获取当前时间和时间范围
@@ -114,9 +113,6 @@ class GitHubCrawler:
         min_fork_ratio = 0.05  # fork数至少是star数的5%
         query_parts.append(f"forks:>={int(config['min_stars'] * min_fork_ratio)}")
 
-        # 添加仓库大小过滤
-        query_parts.append(f"size:>={criteria['min_size']}")
-
         # 排除fork的仓库
         if criteria['exclude_forks']:
             query_parts.append("fork:false")
@@ -138,7 +134,7 @@ class GitHubCrawler:
         - 活跃度：更新频率、issue处理速度
         - 受欢迎度：stars和forks的比例
         - 维护性：文档完整度、issue响应率
-        - 成熟度：项目年龄、版本发布数
+        - 成熟度：项目年龄、主题标签数量、描述完整性
         
         Args:
             project (Dict): 项目信息字典
@@ -148,18 +144,18 @@ class GitHubCrawler:
         """
         scores = []
         
-        # 1. 活跃度评分 (40分)
+        # 1. 活跃度评分 (35分)
         now = datetime.now(timezone.utc)
         updated_at = datetime.fromisoformat(project['updated_at'].replace('Z', '+00:00'))
         update_days = (now - updated_at).days
         # 最近更新得高分
-        activity_score = 40 * (1 - min(update_days / 7, 1))
+        activity_score = 35 * (1 - min(update_days / 7, 1))
         scores.append(activity_score)
         
-        # 2. 增长潜力评分 (30分)
+        # 2. 增长潜力评分 (25分)
         if project['stars'] > 0:
             fork_ratio = project['forks'] / project['stars']
-            growth_score = 30 * min(fork_ratio * 2, 1)  # fork比例越高说明越有潜力
+            growth_score = 25 * min(fork_ratio * 2, 1)  # fork比例越高说明越有潜力
         else:
             growth_score = 0
         scores.append(growth_score)
@@ -172,11 +168,24 @@ class GitHubCrawler:
             maintenance_score = 20 * (1 - min(abs(issue_ratio - ideal_ratio) * 5, 1))
             scores.append(maintenance_score)
         
-        # 4. 成熟度评分 (10分)
-        # 项目大小适中（太小可能功能不足，太大可能过于复杂）
-        ideal_size = 5000  # 理想大小5MB
-        size_diff = abs(project['size'] - ideal_size) / ideal_size
-        maturity_score = 10 * (1 - min(size_diff, 1))
+        # 4. 成熟度评分 (20分) - 不再使用项目大小
+        # 4.1 项目年龄 (10分)
+        created_at = datetime.fromisoformat(project['created_at'].replace('Z', '+00:00'))
+        project_age_days = (now - created_at).days
+        # 项目存在时间越长，越成熟（最高考虑2年）
+        age_score = 10 * min(project_age_days / 730, 1)
+        
+        # 4.2 主题标签完整性 (5分)
+        # 主题标签数量越多，说明项目定义越清晰
+        topics_score = 5 * min(len(project['topics']) / 5, 1)
+        
+        # 4.3 描述完整性 (5分)
+        description = project['description'] or ""
+        # 描述越详细越好（理想长度为100个字符）
+        desc_score = 5 * min(len(description) / 100, 1)
+        
+        # 合并成熟度分数
+        maturity_score = age_score + topics_score + desc_score
         scores.append(maturity_score)
         
         # 确保总分不超过100
