@@ -65,7 +65,7 @@ jobs:
           max_results: ${{ github.event.inputs.max_results || 100 }}
           topics: []
           search_criteria:
-            min_forks: 10
+            min_forks: 100
             min_size: 5
             update_within_days: ${{ github.event.inputs.update_days || 3 }}
             exclude_forks: true
