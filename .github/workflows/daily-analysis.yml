@@ -2,7 +2,7 @@ name: Daily GitHub Analysis
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # UTC时间22点（北京时间次日6点）
+    - cron: '0 22 * * 0'  # UTC时间22点每周日（北京时间周一6点）
   workflow_dispatch:     # 允许手动触发
     inputs:
       search_keywords:
@@ -66,8 +66,8 @@ jobs:
           topics: []
           search_criteria:
             min_forks: 100
-            min_size: 5
-            update_within_days: ${{ github.event.inputs.update_days || 3 }}
+            min_size: 
+            update_within_days: ${{ github.event.inputs.update_days || 7 }}
             exclude_forks: true
             sort_by: "updated"
             sort_order: "desc"
